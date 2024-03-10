@@ -6,6 +6,10 @@
 #include "GameFramework/Character.h"
 #include "BlasterCharacter.generated.h"
 
+class UInputAction;
+class UInputMappingContext;
+struct FInputActionValue;
+
 UCLASS()
 class BLASTER_API ABlasterCharacter : public ACharacter
 {
@@ -18,6 +22,24 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+
+	UPROPERTY(EditAnywhere, Category = Input)
+	UInputMappingContext* InputMappingContext;
+
+	UPROPERTY(EditAnywhere, Category = Input)
+	UInputAction* MoveAction;
+
+	UPROPERTY(EditAnywhere, Category = Input)
+	UInputAction* LookAction;
+
+	UPROPERTY(EditAnywhere, Category = Input)
+	UInputAction* JumpAction;
+
+	/**
+	* Callbacks for input
+	*/
+	void Move(const FInputActionValue& Value);
+	void Look(const FInputActionValue& Value);
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
