@@ -49,8 +49,8 @@ protected:
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 	void EquipButtonPressed(const FInputActionValue& Value);
-	void CrouchButtonPressStarted(const FInputActionValue& Value);
-	void CrouchButtonPressEnded(const FInputActionValue& Value);
+	void CrouchButtonPressed(const FInputActionValue& Value);
+	void CrouchButtonReleased(const FInputActionValue& Value);
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)

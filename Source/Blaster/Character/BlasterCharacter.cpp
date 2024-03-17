@@ -75,8 +75,8 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Look);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Jump);
 		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::EquipButtonPressed);
-		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &ABlasterCharacter::CrouchButtonPressStarted);
-		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Canceled, this, &ABlasterCharacter::CrouchButtonPressEnded);
+		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &ABlasterCharacter::CrouchButtonPressed);
+		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Canceled, this, &ABlasterCharacter::CrouchButtonReleased);
 	}
 }
 
@@ -125,12 +125,12 @@ void ABlasterCharacter::EquipButtonPressed(const FInputActionValue& Value)
 	}
 }
 
-void ABlasterCharacter::CrouchButtonPressStarted(const FInputActionValue& Value)
+void ABlasterCharacter::CrouchButtonPressed(const FInputActionValue& Value)
 {
 	Crouch();
 }
 
-void ABlasterCharacter::CrouchButtonPressEnded(const FInputActionValue& Value)
+void ABlasterCharacter::CrouchButtonReleased(const FInputActionValue& Value)
 {
 	UnCrouch();
 }
