@@ -40,12 +40,17 @@ protected:
 	UPROPERTY(EditAnywhere, Category = Input)
 	UInputAction* EquipAction;
 
+	UPROPERTY(EditAnywhere, Category = Input)
+	UInputAction* CrouchAction;
+
 	/**
 	* Callbacks for input
 	*/
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
-	void Equip(const FInputActionValue& Value);
+	void EquipButtonPressed(const FInputActionValue& Value);
+	void CrouchButtonPressStarted(const FInputActionValue& Value);
+	void CrouchButtonPressEnded(const FInputActionValue& Value);
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)

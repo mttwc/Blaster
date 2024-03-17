@@ -36,6 +36,8 @@ ABlasterCharacter::ABlasterCharacter()
 
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	Combat->SetIsReplicated(true);
+
+	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 }
 
 void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -72,7 +74,9 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Move);
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Look);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Jump);
-		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Equip);
+		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::EquipButtonPressed);
+		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &ABlasterCharacter::CrouchButtonPressStarted);
+		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Canceled, this, &ABlasterCharacter::CrouchButtonPressEnded);
 	}
 }
 
@@ -106,7 +110,7 @@ void ABlasterCharacter::Look(const FInputActionValue& Value)
 	AddControllerYawInput(LookAxisVector.X);
 }
 
-void ABlasterCharacter::Equip(const FInputActionValue& Value)
+void ABlasterCharacter::EquipButtonPressed(const FInputActionValue& Value)
 {
 	if (Combat)
 	{
@@ -119,6 +123,16 @@ void ABlasterCharacter::Equip(const FInputActionValue& Value)
 			ServerEquipButtonPressed();
 		}
 	}
+}
+
+void ABlasterCharacter::CrouchButtonPressStarted(const FInputActionValue& Value)
+{
+	Crouch();
+}
+
+void ABlasterCharacter::CrouchButtonPressEnded(const FInputActionValue& Value)
+{
+	UnCrouch();
 }
 
 void ABlasterCharacter::ServerEquipButtonPressed_Implementation()
