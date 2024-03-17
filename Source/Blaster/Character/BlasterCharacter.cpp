@@ -108,7 +108,22 @@ void ABlasterCharacter::Look(const FInputActionValue& Value)
 
 void ABlasterCharacter::Equip(const FInputActionValue& Value)
 {
-	if (HasAuthority() && Combat)
+	if (Combat)
+	{
+		if (HasAuthority())
+		{
+			Combat->EquipWeapon(OverlappingWeapon);
+		}
+		else
+		{
+			ServerEquipButtonPressed();
+		}
+	}
+}
+
+void ABlasterCharacter::ServerEquipButtonPressed_Implementation()
+{
+	if (Combat)
 	{
 		Combat->EquipWeapon(OverlappingWeapon);
 	}
