@@ -180,7 +180,17 @@ void ABlasterCharacter::AimOffset(float DeltaTime)
 		bUseControllerRotationYaw = true;
 	}
 
+	// Locally, AO_Pitch's negative values are between [-90->0), but for non-local, UE compresses this and sends the
+	// FRotator across the network, the negative values are observed to now lie within [270->360). In such cases we
+	// need to convert this back.
 	AO_Pitch = GetBaseAimRotation().Pitch;
+	if (AO_Pitch > 90.f && !IsLocallyControlled())
+	{
+		// Map pitch from [270->360) to [-90->0)
+		FVector2D InRange(270.f, 360.f);
+		FVector2D OutRange(-90.f, 0.f);
+		AO_Pitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AO_Pitch);
+	}
 }
 
 void ABlasterCharacter::ServerEquipButtonPressed_Implementation()
