@@ -22,6 +22,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void PostInitializeComponents() override;
+	void PlayFireMontage(bool bAiming);
 
 protected:
 	virtual void BeginPlay() override;
@@ -47,6 +48,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = Input)
 	UInputAction* AimAction;
 
+	UPROPERTY(EditAnywhere, Category = Input)
+	UInputAction* FireAction;
+
 	/**
 	* Callbacks for input
 	*/
@@ -56,6 +60,8 @@ protected:
 	void CrouchButtonPressed(const FInputActionValue& Value);
 	void CrouchButtonReleased(const FInputActionValue& Value);
 	void AimButtonPressed(const FInputActionValue& Value);
+	void FireButtonPressed(const FInputActionValue& Value);
+	void FireButtonReleased(const FInputActionValue& Value);
 
 	void AimOffset(float DeltaTime);
 	virtual void Jump() override;
@@ -89,6 +95,9 @@ private:
 
 	ETurningInPlace TurningInPlace;
 	void TurnInPlace(float DeltaTime);
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	class UAnimMontage* FireWeaponMontage;
 
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
