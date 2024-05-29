@@ -135,9 +135,11 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 		if (!TraceHitResult.bBlockingHit)
 		{
 			TraceHitResult.ImpactPoint = End;
+			HitTarget = End;
 		}
 		else
 		{
+			HitTarget = TraceHitResult.ImpactPoint;
 			DrawDebugSphere(
 				GetWorld(),
 				TraceHitResult.ImpactPoint,
@@ -159,6 +161,10 @@ void UCombatComponent::MulticastFire_Implementation()
 	if (Character && EquippedWeapon)
 	{
 		Character->PlayFireMontage(bAiming);
-		EquippedWeapon->Fire();
+
+		// We are only performing the line trace locally, so the HitTarget here will only be set to the correct value
+		// on the local machine for now. Also, the line trace depends on the viewport existing, so e.g., simulated
+		// proxies that do not have a viewport will not produce a valid result.
+		EquippedWeapon->Fire(HitTarget);
 	}
 }
