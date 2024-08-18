@@ -24,8 +24,8 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void PostInitializeComponents() override;
 	void PlayFireMontage(bool bAiming);
-
 	virtual void OnRep_ReplicatedMovement() override;
+	void Elim();
 
 protected:
 	virtual void BeginPlay() override;
