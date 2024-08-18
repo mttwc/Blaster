@@ -12,6 +12,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
+#include "TimerManager.h"
 
 UCombatComponent::UCombatComponent()
 {
@@ -115,14 +116,24 @@ void UCombatComponent::FireButtonPressed(bool bPressed)
 
 	if (bFireButtonPressed)
 	{
-		FHitResult HitResult;
-		TraceUnderCrosshairs(HitResult);
-		ServerFire(HitResult.ImpactPoint);
+		Fire();
+	}
+}
+
+void UCombatComponent::Fire()
+{
+	if (bCanFire)
+	{
+		bCanFire = false;
+
+		ServerFire(HitTarget);
 
 		if (EquippedWeapon)
 		{
 			CrosshairShootingFactor = 0.75f;
 		}
+
+		StartFireTimer();
 	}
 }
 
@@ -273,6 +284,34 @@ void UCombatComponent::InterpFOV(float DeltaTime)
 	if (Character && Character->GetFollowCamera())
 	{
 		Character->GetFollowCamera()->SetFieldOfView(CurrentFOV);
+	}
+}
+
+void UCombatComponent::StartFireTimer()
+{
+	if (!EquippedWeapon || !Character)
+	{
+		return;
+	}
+
+	Character->GetWorldTimerManager().SetTimer(
+		FireTimer,
+		this,
+		&UCombatComponent::FireTimerFinished,
+		EquippedWeapon->FireDelay);
+}
+
+void UCombatComponent::FireTimerFinished()
+{
+	if (!EquippedWeapon)
+	{
+		return;
+	}
+
+	bCanFire = true;
+	if (bFireButtonPressed && EquippedWeapon->bAutomatic)
+	{
+		Fire();
 	}
 }
 
