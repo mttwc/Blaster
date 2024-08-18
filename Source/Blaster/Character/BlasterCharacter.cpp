@@ -5,6 +5,7 @@
 #include "BlasterAnimInstance.h"
 #include "Blaster/Blaster.h"
 #include "Blaster/BlasterComponents/CombatComponent.h"
+#include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Blaster/Weapon/Weapon.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -80,6 +81,22 @@ void ABlasterCharacter::BeginPlay()
 		{
 			Subsystem->AddMappingContext(InputMappingContext, 0);
 		}
+	}
+
+	UpdateHUDHealth();
+
+	if (HasAuthority())
+	{
+		OnTakeAnyDamage.AddDynamic(this, &ABlasterCharacter::ReceiveDamage);
+	}
+}
+
+void ABlasterCharacter::UpdateHUDHealth()
+{
+	BlasterPlayerController = !BlasterPlayerController ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
+	if (BlasterPlayerController)
+	{
+		BlasterPlayerController->SetHUDHealth(Health, MaxHealth);
 	}
 }
 
@@ -163,6 +180,14 @@ void ABlasterCharacter::PlayHitReactMontage()
 		FName SectionName("FromFront");
 		AnimInstance->Montage_JumpToSection(SectionName);
 	}
+}
+
+void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatorController, AActor* DamageCauser)
+{
+	Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
+
+	UpdateHUDHealth();
+	PlayHitReactMontage();
 }
 
 void ABlasterCharacter::Move(const FInputActionValue& Value)
@@ -378,11 +403,6 @@ void ABlasterCharacter::ServerEquipButtonPressed_Implementation()
 	}
 }
 
-void ABlasterCharacter::MulticastHit_Implementation()
-{
-	PlayHitReactMontage();
-}
-
 void ABlasterCharacter::HideCharacterIfCameraClose()
 {
 	if (!IsLocallyControlled())
@@ -410,6 +430,8 @@ void ABlasterCharacter::HideCharacterIfCameraClose()
 
 void ABlasterCharacter::OnRep_Health()
 {
+	UpdateHUDHealth();
+	PlayHitReactMontage();
 }
 
 void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)

@@ -25,13 +25,12 @@ public:
 	virtual void PostInitializeComponents() override;
 	void PlayFireMontage(bool bAiming);
 
-	UFUNCTION(NetMulticast, Unreliable)
-	void MulticastHit();
-
 	virtual void OnRep_ReplicatedMovement() override;
 
 protected:
 	virtual void BeginPlay() override;
+
+	void UpdateHUDHealth();
 
 	UPROPERTY(EditAnywhere, Category = Input)
 	UInputMappingContext* InputMappingContext;
@@ -69,6 +68,8 @@ protected:
 	void FireButtonPressed(const FInputActionValue& Value);
 	void FireButtonReleased(const FInputActionValue& Value);
 	void PlayHitReactMontage();
+	UFUNCTION()
+	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
 
 	void AimOffset(float DeltaTime);
 	void CalculateAO_Pitch();
@@ -136,6 +137,8 @@ private:
 
 	UFUNCTION()
 	void OnRep_Health();
+
+	class ABlasterPlayerController* BlasterPlayerController;
 
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);

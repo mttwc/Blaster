@@ -52,12 +52,6 @@ void AProjectile::BeginPlay()
 
 void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(OtherActor);
-	if (BlasterCharacter)
-	{
-		BlasterCharacter->MulticastHit();
-	}
-
 	// Note: Hit events are only being generated on the server. We could call an RPC to generate the impact particles
 	// and sound on each client, but since the projectile is already replicated to the client, we can piggyback the
 	// object destruction to play those!
