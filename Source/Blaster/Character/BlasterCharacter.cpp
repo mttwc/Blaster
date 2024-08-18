@@ -62,6 +62,13 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME_CONDITION(ABlasterCharacter, OverlappingWeapon, COND_OwnerOnly);
 }
 
+void ABlasterCharacter::OnRep_ReplicatedMovement()
+{
+	Super::OnRep_ReplicatedMovement();
+	SimProxiesTurn();
+	TimeSinceLastMovementReplication = 0.f;
+}
+
 void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -80,6 +87,21 @@ void ABlasterCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	AimOffset(DeltaTime);
+
+	if (GetLocalRole() > ENetRole::ROLE_SimulatedProxy && IsLocallyControlled())
+	{
+		AimOffset(DeltaTime);
+	}
+	else
+	{
+		TimeSinceLastMovementReplication += DeltaTime;
+		if (TimeSinceLastMovementReplication > 0.25f)
+		{
+			OnRep_ReplicatedMovement();
+		}
+		CalculateAO_Pitch();
+	}
+
 	HideCharacterIfCameraClose();
 }
 
@@ -212,6 +234,13 @@ void ABlasterCharacter::FireButtonReleased(const FInputActionValue& Value)
 	}
 }
 
+float ABlasterCharacter::CalculateSpeed()
+{
+	FVector Velocity = GetVelocity();
+	Velocity.Z = 0.f;
+	return Velocity.Size();
+}
+
 void ABlasterCharacter::AimOffset(float DeltaTime)
 {
 	if (!Combat || !Combat->EquippedWeapon)
@@ -219,16 +248,14 @@ void ABlasterCharacter::AimOffset(float DeltaTime)
 		return;
 	}
 
-	FVector Velocity = GetVelocity();
-	Velocity.Z = 0.f;
-	const float Speed = Velocity.Size();
-
+	const float Speed = CalculateSpeed();
 	const bool bIsInAir = GetCharacterMovement()->IsFalling();
 
 	// When moving or in the air, we want to have the character look ahead. When idle and looking around, we want the
 	// character to be facing the same direction as the camera.
 	if (Speed == 0.f && !bIsInAir)
 	{
+		bRotateRootBone = true;
 		FRotator CurrentAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
 		FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimRotation, StartingAimRotation);
 		AO_Yaw = DeltaAimRotation.Yaw;
@@ -242,6 +269,7 @@ void ABlasterCharacter::AimOffset(float DeltaTime)
 	}
 	if (Speed > 0.f || bIsInAir)
 	{
+		bRotateRootBone = false;
 		StartingAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
 		AO_Yaw = 0.f;
 		bUseControllerRotationYaw = true;
@@ -249,17 +277,62 @@ void ABlasterCharacter::AimOffset(float DeltaTime)
 		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 	}
 
+	CalculateAO_Pitch();
+}
+
+void ABlasterCharacter::CalculateAO_Pitch()
+{
 	// Locally, AO_Pitch's negative values are between [-90->0), but for non-local, UE compresses this and sends the
 	// FRotator across the network, the negative values are observed to now lie within [270->360). In such cases we
 	// need to convert this back.
 	AO_Pitch = GetBaseAimRotation().Pitch;
 	if (AO_Pitch > 90.f && !IsLocallyControlled())
 	{
-		// Map pitch from [270->360) to [-90->0)
+		// Map pitch from [270, 360) to [-90, 0)
 		FVector2D InRange(270.f, 360.f);
 		FVector2D OutRange(-90.f, 0.f);
 		AO_Pitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AO_Pitch);
 	}
+}
+
+void ABlasterCharacter::SimProxiesTurn()
+{
+	if (!Combat || !Combat->EquippedWeapon)
+	{
+		return;
+	}
+
+	bRotateRootBone = false;
+	float Speed = CalculateSpeed();
+	if (Speed > 0.f)
+	{
+		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+		return;
+	}
+
+	ProxyRotationLastFrame = ProxyRotation;
+	ProxyRotation = GetActorRotation();
+	ProxyYaw = UKismetMathLibrary::NormalizedDeltaRotator(ProxyRotation, ProxyRotationLastFrame).Yaw;
+
+	UE_LOG(LogTemp, Warning, TEXT("ProxyYaw: %f"), ProxyYaw);
+
+	if (FMath::Abs(ProxyYaw) > TurnThreshold)
+	{
+		if (ProxyYaw > TurnThreshold)
+		{
+			TurningInPlace = ETurningInPlace::ETIP_Right;
+		}
+		else if (ProxyYaw < -TurnThreshold)
+		{
+			TurningInPlace = ETurningInPlace::ETIP_Left;
+		}
+		else
+		{
+			TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+		}
+		return;
+	}
+	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 }
 
 void ABlasterCharacter::Jump()
