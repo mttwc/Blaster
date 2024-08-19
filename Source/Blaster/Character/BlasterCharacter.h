@@ -36,8 +36,6 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	void UpdateHUDHealth();
-
 	UPROPERTY(EditAnywhere, Category = Input)
 	UInputMappingContext* InputMappingContext;
 
@@ -76,6 +74,9 @@ protected:
 	void PlayHitReactMontage();
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
+	void UpdateHUDHealth();
+	// Poll for any relevant classes and initialize our HUD
+	void PollInit();
 
 	void AimOffset(float DeltaTime);
 	void CalculateAO_Pitch();
@@ -193,6 +194,8 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	class USoundCue* ElimBotSound;
+
+	class ABlasterPlayerState* BlasterPlayerState;
 
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
