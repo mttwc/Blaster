@@ -25,6 +25,7 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void PostInitializeComponents() override;
 	void PlayFireMontage(bool bAiming);
+	void PlayReloadMontage();
 	void PlayElimMontage();
 	virtual void OnRep_ReplicatedMovement() override;
 
@@ -60,6 +61,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = Input)
 	UInputAction* FireAction;
 
+	UPROPERTY(EditAnywhere, Category = Input)
+	UInputAction* ReloadAction;
+
 	/**
 	* Callbacks for input
 	*/
@@ -71,6 +75,7 @@ protected:
 	void AimButtonPressed(const FInputActionValue& Value);
 	void FireButtonPressed(const FInputActionValue& Value);
 	void FireButtonReleased(const FInputActionValue& Value);
+	void ReloadButtonPressed(const FInputActionValue& Value);
 	void PlayHitReactMontage();
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
@@ -115,6 +120,9 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	class UAnimMontage* FireWeaponMontage;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	UAnimMontage* ReloadMontage;
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	class UAnimMontage* HitReactMontage;

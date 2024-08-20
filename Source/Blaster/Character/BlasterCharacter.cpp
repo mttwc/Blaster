@@ -246,6 +246,7 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::AimButtonPressed);
 		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &ABlasterCharacter::FireButtonPressed);
 		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &ABlasterCharacter::FireButtonReleased);
+		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::ReloadButtonPressed);
 	}
 }
 
@@ -270,6 +271,27 @@ void ABlasterCharacter::PlayFireMontage(bool bAiming)
 	{
 		AnimInstance->Montage_Play(FireWeaponMontage);
 		FName SectionName = bAiming ? FName("RifleAim") : FName("RifleHip");
+		AnimInstance->Montage_JumpToSection(SectionName);
+	}
+}
+
+void ABlasterCharacter::PlayReloadMontage()
+{
+	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && ReloadMontage)
+	{
+		AnimInstance->Montage_Play(ReloadMontage);
+		FName SectionName;
+
+		switch (Combat->EquippedWeapon->GetWeaponType())
+		{
+		case EWeaponType::EWT_AssaultRifle:
+			SectionName = FName("Rifle");
+			break;
+		}
+
 		AnimInstance->Montage_JumpToSection(SectionName);
 	}
 }
@@ -390,6 +412,14 @@ void ABlasterCharacter::FireButtonReleased(const FInputActionValue& Value)
 	}
 }
 
+void ABlasterCharacter::ReloadButtonPressed(const FInputActionValue& Value)
+{
+	if (Combat)
+	{
+		Combat->Reload();
+	}
+}
+
 float ABlasterCharacter::CalculateSpeed()
 {
 	FVector Velocity = GetVelocity();
@@ -469,8 +499,6 @@ void ABlasterCharacter::SimProxiesTurn()
 	ProxyRotationLastFrame = ProxyRotation;
 	ProxyRotation = GetActorRotation();
 	ProxyYaw = UKismetMathLibrary::NormalizedDeltaRotator(ProxyRotation, ProxyRotationLastFrame).Yaw;
-
-	UE_LOG(LogTemp, Warning, TEXT("ProxyYaw: %f"), ProxyYaw);
 
 	if (FMath::Abs(ProxyYaw) > TurnThreshold)
 	{
