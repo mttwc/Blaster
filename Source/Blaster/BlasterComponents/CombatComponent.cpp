@@ -12,6 +12,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
+#include "Sound/SoundCue.h"
 #include "TimerManager.h"
 
 UCombatComponent::UCombatComponent()
@@ -77,6 +78,15 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	if (Controller)
 	{
 		Controller->SetHUDCarriedAmmo(CarriedAmmo);
+	}
+
+	if (EquippedWeapon->EquipSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			this,
+			EquippedWeapon->EquipSound,
+			Character->GetActorLocation()
+		);
 	}
 
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
@@ -217,6 +227,15 @@ void UCombatComponent::OnRep_EquippedWeapon()
 
 		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 		Character->bUseControllerRotationYaw = true;
+
+		if (EquippedWeapon->EquipSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(
+				this,
+				EquippedWeapon->EquipSound,
+				Character->GetActorLocation()
+			);
+		}
 	}
 }
 
@@ -452,7 +471,7 @@ void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& Trac
 
 void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {
-	if (Character && CombatState == ECombatState::ECS_Unoccupied)
+	if (Character && CombatState == ECombatState::ECS_Unoccupied && EquippedWeapon)
 	{
 		Character->PlayFireMontage(bAiming);
 		EquippedWeapon->Fire(TraceHitTarget);
