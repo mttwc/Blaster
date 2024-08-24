@@ -35,6 +35,9 @@ public:
 	void MulticastElim();
 	virtual void Destroyed() override;
 
+	UPROPERTY(Replicated)
+	bool bDisableGameplay = false;
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -83,6 +86,7 @@ protected:
 	void UpdateHUDHealth();
 	// Poll for any relevant classes and initialize our HUD
 	void PollInit();
+	void RotateInPlace(float DeltaTime);
 
 	void AimOffset(float DeltaTime);
 	void CalculateAO_Pitch();
@@ -223,4 +227,6 @@ public:
 	FORCEINLINE float GetHealth() const { return Health; }
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
 	ECombatState GetCombatState() const;
+	FORCEINLINE UCombatComponent* GetCombat() const { return Combat; }
+	FORCEINLINE bool GetDisableGameplay() const { return bDisableGameplay; }
 };
